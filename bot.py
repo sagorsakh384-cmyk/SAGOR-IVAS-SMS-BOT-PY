@@ -23,22 +23,37 @@ from con_ns import (
 )
 # ================= CONFIG ================
 
-
-POLL_INTERVAL_SECONDS = 4
-MAX_WORKERS = 8
+# ⚡ দ্রুত পোলিং এর জন্য ৩ সেকেন্ড
+POLL_INTERVAL_SECONDS = 3
+MAX_WORKERS = 10  # একসাথে বেশি নাম্বার চেক করবে
 
 RANGES_DIR = "ranges"
 
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")
 
-# 🔧
+# 🔧 সেশন কনফিগারেশন
 session = requests.Session()
 
-# Retry setup
+# কানেকশন পুল বাড়ানো
+adapter = requests.adapters.HTTPAdapter(
+    pool_connections=20,
+    pool_maxsize=20,
+    max_retries=3,
+    pool_block=False
+)
+session.mount('http://', adapter)
+session.mount('https://', adapter)
+
+# Retry setup with connection errors
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-retry_strategy = Retry(total=4, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504])
+retry_strategy = Retry(
+    total=5,  # বেশি রিট্রাই
+    backoff_factor=0.5,  # কম সময়ে রিট্রাই
+    status_forcelist=[429, 500, 502, 503, 504],
+    allowed_methods=["HEAD", "GET", "OPTIONS", "POST"]
+)
 adapter = HTTPAdapter(max_retries=retry_strategy)
 session.mount("http://", adapter)
 session.mount("https://", adapter)
@@ -46,15 +61,36 @@ session.mount("https://", adapter)
 csrf_token = None
 seen_otps = {}
 user_states = {}
+last_reset_time = time.time()
 
 if not os.path.exists(RANGES_DIR):
     os.makedirs(RANGES_DIR)
 
 # দেশের কোড + নাম + ফ্ল্যাগ
 
+def reset_session_if_needed():
+    """প্রতি ১০ মিনিট পর সেশন রিসেট করে (স্টল প্রতিরোধ)"""
+    global session, last_reset_time
+    now = time.time()
+    if now - last_reset_time > 600:  # ১০ মিনিট
+        print("[SESSION] রিসেট করা হচ্ছে...")
+        session = requests.Session()
+        # কানেকশন পুল আবার সেট
+        adapter = requests.adapters.HTTPAdapter(
+            pool_connections=20,
+            pool_maxsize=20,
+            max_retries=3
+        )
+        session.mount('http://', adapter)
+        session.mount('https://', adapter)
+        last_reset_time = now
+        return True
+    return False
+
 def login_and_get_csrf():
     global csrf_token
     try:
+        reset_session_if_needed()
         r = session.get(LOGIN_URL, timeout=30)
         soup = BeautifulSoup(r.text, "html.parser")
         token_tag = soup.find("input", {"name": "_token"})
@@ -103,16 +139,18 @@ def fetch_otps(number, range_name):
         "X-Requested-With": "XMLHttpRequest",
         "Referer": PORTAL_URL,
         "Accept": "*/*",
-        "Content-Type": "application/x-www-form-urlencoded"
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Connection": "keep-alive"
     }
 
     try:
-        r = session.post(SMS_URL, data=payload, headers=headers, timeout=35)
+        # টাইমআউট বাড়ানো
+        r = session.post(SMS_URL, data=payload, headers=headers, timeout=45)
 
         if r.status_code == 419:
             if login_and_get_csrf():
                 headers["X-CSRF-TOKEN"] = csrf_token
-                r = session.post(SMS_URL, data=payload, headers=headers, timeout=35)
+                r = session.post(SMS_URL, data=payload, headers=headers, timeout=45)
             else:
                 return None, "419 - CSRF fail"
 
@@ -150,6 +188,14 @@ def fetch_otps(number, range_name):
 
         return messages, None
 
+    except requests.exceptions.ConnectionError as e:
+        print(f"[CONNECTION ERROR] {number}: {e}")
+        # কানেকশন error হলে সেশন রিসেট
+        reset_session_if_needed()
+        return None, "Connection error"
+    except requests.exceptions.Timeout as e:
+        print(f"[TIMEOUT ERROR] {number}: {e}")
+        return None, "Timeout"
     except Exception as e:
         print(f"[FETCH ERR] {number}: {e}")
         return None, "এরর"
@@ -439,6 +485,7 @@ def load_all_numbers():
 
 def polling_loop():
     print(f"[POLLING] শুরু — প্রতি ~{POLL_INTERVAL_SECONDS} সেকেন্ডে (workers={MAX_WORKERS})")
+    consecutive_errors = 0
     while True:
         cycle_start = time.time()
         try:
@@ -450,6 +497,9 @@ def polling_loop():
                 with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
                     futures = [executor.submit(fetch_and_post_new_otps, item["number"], item["range"]) for item in items]
                     concurrent.futures.wait(futures)
+                consecutive_errors = 0
+            else:
+                print(f"[POLL] কোনো নম্বর নেই")
 
             elapsed = time.time() - cycle_start
             sleep_time = max(POLL_INTERVAL_SECONDS - elapsed, 1.0)
@@ -457,8 +507,14 @@ def polling_loop():
             time.sleep(sleep_time)
 
         except Exception as ex:
-            print(f"[POLL ERR]: {ex}")
-            time.sleep(10)
+            consecutive_errors += 1
+            print(f"[POLL ERR] #{consecutive_errors}: {ex}")
+            if consecutive_errors > 5:
+                print("[POLL] অনেক error, ৩০ সেকেন্ড বিরতি")
+                time.sleep(30)
+                consecutive_errors = 0
+            else:
+                time.sleep(10)
 
 # --------------------- অ্যাডমিন প্যানেল ---------------------
 
@@ -614,7 +670,8 @@ if __name__ == "__main__":
 
     threading.Thread(target=polling_loop, daemon=True).start()
 
-    print("BOT STARTED → প্রতি ~৪ সেকেন্ডে পোলিং চলছে")
+    print("⚡ BOT STARTED → প্রতি ৩ সেকেন্ডে দ্রুত পোলিং চলছে")
+    print(f"📊 মোট নাম্বার: {len(load_all_numbers())}")
 
     while True:
         try:
