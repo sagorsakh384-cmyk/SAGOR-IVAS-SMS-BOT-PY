@@ -207,6 +207,7 @@ def fetch_and_post_new_otps(number, range_name):
         # full_body সেফ করা — HTML escape + # escape
         safe_body = html.escape(full_body).replace("#", "\\#").replace("<", "&lt;").replace(">", "&gt;")
 
+        # 📌 মেসেজ তৈরি - শেষ লাইনে "power by AH METHOD TEAM"
         message_text = f"""🔩🔩. <b>{flag} {client.upper()} 🅰🅷 🅼🅴🆃🅷🅾🅳 </b>.🔪🔪
 ﹐﹐﹐﹐﹐﹐﹐﹐﹐﹐﹐﹐﹐﹐
 <blockquote>{flag} 𝗖𝗼𝘂𝗻𝘁𝗿𝘆 » {country_name}
@@ -214,11 +215,22 @@ def fetch_and_post_new_otps(number, range_name):
 🔑𝗢𝗧𝗣 » <code>{otp_text}</code>
 <blockquote><code>{safe_body}</code></blockquote>
 
-— 𝗔𝗛 𝗠𝗘𝗧𝗛𝗢𝗗 𝗧𝗘𝗔𝗠"""
+power by AH METHOD TEAM"""
+
+        # 📌 ৩টি বাটন তৈরি
+        markup = InlineKeyboardMarkup()
+        markup.row_width = 3
+        
+        # আপনার ইচ্ছামতো বাটনের নাম ও লিংক দিন
+        button1 = InlineKeyboardButton("📢 NUMBER CHANNEL", url="https://t.me/blackotpnum")
+        button2 = InlineKeyboardButton("💬 CHAT GROUP", url="https://t.me/EarningHub6112")
+        button3 = InlineKeyboardButton("🤖 বট", url="https://t.me/ah_method_number_bot")
+        
+        markup.add(button1, button2, button3)
 
         try:
-            bot.send_message(CHAT_ID, message_text)
-            print(f"[SENT] {client} OTP {otp} for {number} ({country_name})")
+            bot.send_message(CHAT_ID, message_text, reply_markup=markup)
+            print(f"[SENT] {client} OTP {otp} for {number} ({country_name}) with buttons")
         except Exception as e:
             print(f"[SEND ERR] {number} OTP {otp}: {e}")
 
