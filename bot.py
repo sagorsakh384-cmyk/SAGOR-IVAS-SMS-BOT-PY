@@ -186,7 +186,7 @@ def fetch_and_post_new_otps(number, range_name):
         otp_text = otp if otp else "❌ OTP NOT FOUND"
         full_body = msg['full_body']
 
-        # 📌 সব সার্ভিস ডিটেক্ট (সম্পূর্ণ তালিকা)
+        # ক্লায়েন্ট ডিটেক্ট
         lower = full_body.lower()
         client = "Other Service"
 
@@ -259,10 +259,6 @@ def fetch_and_post_new_otps(number, range_name):
             client = "Daraz"
         elif "walmart" in lower:
             client = "Walmart"
-        elif "target" in lower:
-            client = "Target"
-        elif "bestbuy" in lower:
-            client = "Best Buy"
         
         # পেমেন্ট/ফাইনান্স
         elif "paypal" in lower:
@@ -283,16 +279,6 @@ def fetch_and_post_new_otps(number, range_name):
             client = "Cash App"
         elif "wise" in lower or "transferwise" in lower:
             client = "Wise"
-        elif "payoneer" in lower:
-            client = "Payoneer"
-        elif "skrill" in lower:
-            client = "Skrill"
-        elif "neteller" in lower:
-            client = "Neteller"
-        elif "webmoney" in lower:
-            client = "WebMoney"
-        elif "perfect money" in lower:
-            client = "Perfect Money"
         
         # ক্রিপ্টো
         elif "binance" in lower:
@@ -309,16 +295,8 @@ def fetch_and_post_new_otps(number, range_name):
             client = "Huobi"
         elif "kraken" in lower:
             client = "Kraken"
-        elif "crypto.com" in lower:
-            client = "Crypto.com"
         elif "metamask" in lower:
             client = "MetaMask"
-        elif "trust wallet" in lower:
-            client = "Trust Wallet"
-        elif "coinmarketcap" in lower:
-            client = "CoinMarketCap"
-        elif "coingecko" in lower:
-            client = "CoinGecko"
         
         # গেমিং
         elif "steam" in lower:
@@ -337,24 +315,10 @@ def fetch_and_post_new_otps(number, range_name):
             client = "Minecraft"
         elif "riot" in lower or "lol" in lower or "valorant" in lower:
             client = "Riot Games"
-        elif "blizzard" in lower or "warcraft" in lower or "overwatch" in lower:
+        elif "blizzard" in lower or "warcraft" in lower:
             client = "Blizzard"
-        elif "origin" in lower or "ea" in lower or "electronic arts" in lower:
+        elif "origin" in lower or "ea" in lower:
             client = "EA"
-        elif "ubisoft" in lower:
-            client = "Ubisoft"
-        elif "rockstar" in lower or "gta" in lower:
-            client = "Rockstar Games"
-        elif "bethesda" in lower:
-            client = "Bethesda"
-        elif "capcom" in lower:
-            client = "Capcom"
-        elif "square enix" in lower:
-            client = "Square Enix"
-        elif "sega" in lower:
-            client = "Sega"
-        elif "bandai" in lower or "namco" in lower:
-            client = "Bandai Namco"
         
         # স্ট্রিমিং
         elif "netflix" in lower:
@@ -371,24 +335,6 @@ def fetch_and_post_new_otps(number, range_name):
             client = "Amazon Prime"
         elif "hotstar" in lower:
             client = "Hotstar"
-        elif "zee5" in lower:
-            client = "ZEE5"
-        elif "sony liv" in lower:
-            client = "Sony LIV"
-        elif "voot" in lower:
-            client = "Voot"
-        elif "altbalaji" in lower:
-            client = "ALTBalaji"
-        elif "mx player" in lower:
-            client = "MX Player"
-        elif "hbo" in lower or "max" in lower:
-            client = "HBO Max"
-        elif "paramount" in lower:
-            client = "Paramount+"
-        elif "peacock" in lower:
-            client = "Peacock"
-        elif "apple tv" in lower:
-            client = "Apple TV+"
         
         # ডেলিভারি/রাইড শেয়ারিং
         elif "uber" in lower:
@@ -403,18 +349,10 @@ def fetch_and_post_new_otps(number, range_name):
             client = "Swiggy"
         elif "zomato" in lower:
             client = "Zomato"
-        elif "deliveroo" in lower:
-            client = "Deliveroo"
         elif "bolt" in lower:
             client = "Bolt"
         elif "careem" in lower:
             client = "Careem"
-        elif "grab" in lower:
-            client = "Grab"
-        elif "gojek" in lower:
-            client = "Gojek"
-        elif "ola" in lower:
-            client = "Ola"
         
         # ব্যাংকিং
         elif "bank" in lower:
@@ -427,15 +365,9 @@ def fetch_and_post_new_otps(number, range_name):
             client = "Sonali Bank"
         elif "ibanking" in lower or "internet banking" in lower:
             client = "Internet Banking"
-        elif "amex" in lower or "american express" in lower:
-            client = "American Express"
-        elif "visa" in lower:
-            client = "Visa"
-        elif "mastercard" in lower:
-            client = "Mastercard"
         
         # অন্যান্য
-        elif "microsoft" in lower or "outlook" in lower or "live.com" in lower or "hotmail" in lower:
+        elif "microsoft" in lower or "outlook" in lower or "live.com" in lower:
             client = "Microsoft"
         elif "apple" in lower or "icloud" in lower:
             client = "Apple"
@@ -459,38 +391,6 @@ def fetch_and_post_new_otps(number, range_name):
             client = "Bumble"
         elif "onlyfans" in lower:
             client = "OnlyFans"
-        elif "grindr" in lower:
-            client = "Grindr"
-        elif "wordpress" in lower:
-            client = "WordPress"
-        elif "medium" in lower:
-            client = "Medium"
-        elif "quora" in lower:
-            client = "Quora"
-        elif "stackoverflow" in lower or "stack overflow" in lower:
-            client = "Stack Overflow"
-        elif "github" in lower:
-            client = "GitHub"
-        elif "gitlab" in lower:
-            client = "GitLab"
-        elif "bitbucket" in lower:
-            client = "Bitbucket"
-        elif "heroku" in lower:
-            client = "Heroku"
-        elif "netlify" in lower:
-            client = "Netlify"
-        elif "vercel" in lower:
-            client = "Vercel"
-        elif "cloudflare" in lower:
-            client = "Cloudflare"
-        elif "digitalocean" in lower:
-            client = "DigitalOcean"
-        elif "aws" in lower or "amazon web services" in lower:
-            client = "AWS"
-        elif "google cloud" in lower:
-            client = "Google Cloud"
-        elif "azure" in lower:
-            client = "Azure"
 
         # full_body সেফ করা — HTML escape + # escape
         safe_body = html.escape(full_body).replace("#", "\\#").replace("<", "&lt;").replace(">", "&gt;")
