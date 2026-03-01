@@ -224,7 +224,7 @@ power by AH METHOD TEAM"""
         # আপনার ইচ্ছামতো বাটনের নাম ও লিংক দিন
         button1 = InlineKeyboardButton("📢 NUMBER CHANNEL", url="https://t.me/blackotpnum")
         button2 = InlineKeyboardButton("💬 CHAT GROUP", url="https://t.me/EarningHub6112")
-        button3 = InlineKeyboardButton("🤖 বট", url="https://t.me/ah_method_number_bot")
+        button3 = InlineKeyboardButton("🤖 NUMBER BOT", url="https://t.me/ah_method_number_bot")
         
         markup.add(button1, button2, button3)
 
